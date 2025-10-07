@@ -2,4 +2,4 @@
 
 Flexible binary data parsing and building for Python.
 
-## [Example](./tests/__main__.py)
+## [Example](./tests/__init__.py)

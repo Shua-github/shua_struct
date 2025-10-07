@@ -1,13 +1,19 @@
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Callable
+from abc import ABC, abstractmethod
 import struct
 
-@runtime_checkable
-class FieldProtocol(Protocol):
+class Field(ABC):
+    @abstractmethod
     def get_length(self, context: dict | None = None) -> int: ...
-    def parse(self, data: bytes, context: dict | None = None) -> Any: ...
+
+    @classmethod
+    @abstractmethod
+    def parse(cls, data: bytes, context: dict | None = None) -> Any: ...
+
+    @abstractmethod
     def build(self, value: Any = None, context: dict | None = None) -> bytes: ...
 
-class IntField(int):
+class IntField(Field, int):
     fmt: str
     size: int
 
@@ -59,30 +65,32 @@ class UInt64(IntField):
     size = struct.calcsize(fmt)
 
 # -----------------------------
-class BytesField(bytes):
-    def __new__(cls, value: bytes | None = None, length: int | None = None):
+class BytesField(Field, bytes):
+    def __new__(cls, value: bytes | None = None, length: int | Callable[[dict], int] | None = None):
         if value is None:
             value = b''
         obj = super().__new__(cls, value)
         obj._length = length
         return obj
 
-    def get_length(self, context=None) -> int:
-        if callable(self._length):
+    def get_length(self, context: dict | None = None) -> int:
+        if self._length is None:
+            return len(self)
+        elif callable(self._length):
             return self._length(context or {})
-        return self._length or len(self)
+        else:
+            return self._length
 
     def build(self, context=None) -> bytes:
         length = self.get_length(context)
         return self[:length]
-
+    
     @classmethod
-    def parse(cls, data: bytes, context=None, length=None):
-        if length is None and context is not None:
-            length = getattr(cls, '_length', None)
-            if callable(length):
-                length = length(context)
-        length = length or len(data)
+    def parse(cls, data: bytes, context: dict | None = None, length: int | Callable[[dict], int] | None = None) -> 'BytesField':
+        if length is None:
+            length = len(data)
+        if callable(length):
+            length = length(context or {})
         return cls(data[:length], length=length)
 
     def __repr__(self):
@@ -93,7 +101,7 @@ class BytesField(bytes):
         return bytes(self)
 
 __all__ = [
-    "FieldProtocol", "IntField",
+    "Field", "IntField",
     "Int8", "UInt8",
     "Int16", "UInt16",
     "Int32", "UInt32",

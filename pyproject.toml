@@ -1,6 +1,6 @@
 [project]
 name = "shua_struct"
-version = "0.1.0"
+version = "0.1.2"
 description = "Flexible binary data parsing and building for Python."
 authors = [
     {name = "Shua-github", email = "CHA_shua@outlook.com"},
@@ -8,7 +8,10 @@ authors = [
 dependencies = []
 requires-python = ">=3.10"
 readme = "README.md"
-license = {text = "MIT"}
+license = {file ="./LICENSE"}
+
+[project.urls]
+"Repository" = "https://github.com/shua-github/shua_struct"
 
 [build-system]
 requires = ["pdm-backend"]
@@ -19,3 +22,6 @@ includes = ["./shua"]
 
 [tool.pdm]
 distribution = true
+
+[tool.pdm.scripts]
+test.call = "tests:main"
