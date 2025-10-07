@@ -1,6 +1,6 @@
 [project]
 name = "shua_struct"
-version = "0.1.2"
+version = "0.1.3"
 description = "Flexible binary data parsing and building for Python."
 authors = [
     {name = "Shua-github", email = "CHA_shua@outlook.com"},

@@ -43,30 +43,26 @@ class BinaryStruct(Field, metaclass=BinaryMeta):
         if context is None:
             context = {}
         ctx = context.copy()
-        offset = 0
         obj_kwargs = {}
         
         for name, (field_type, default) in cls._fields_info.items():
-            field_length = cls._get_field_length(name, field_type, default, ctx, data, offset)
-            field_data = data[offset:offset + field_length]
-            if len(field_data) < field_length:
-                raise ValueError(f"Insufficient data for field '{name}' at offset {offset}: expected {field_length}, got {len(field_data)}")
+            if default is not None:
+                field_length = default.get_length(ctx)
+            else:
+                temp_instance = field_type()
+                field_length = temp_instance.get_length(ctx)
             
-            value = field_type.parse(data, context)
+            if field_length > len(data):
+                raise ValueError(f"Insufficient data for field '{name}': expected {field_length}, got {len(data)}")
             
-            offset += field_length
+            field_data = data[:field_length]
+            value = field_type.parse(field_data, ctx)
+            
+            data = data[field_length:]
             ctx[name] = value
             obj_kwargs[name] = value
         
         return cls(**obj_kwargs)
-
-    @classmethod
-    def _get_field_length(cls, name: str, field_type: Type[Field], default: Any, context: dict, data: bytes, offset: int) -> int:
-        if default is not None:
-            return default.get_length(context)
-        else:
-            temp_instance = field_type()
-            return temp_instance.get_length(context)
 
     def get_length(self, context: dict | None = None) -> int:
         if context is None:

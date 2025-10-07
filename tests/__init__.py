@@ -2,8 +2,11 @@
 from shua.struct import * 
 
 def main():
-    class Header(BinaryStruct):
+    class SubHeader(BinaryStruct):
         version: UInt8
+
+    class Header(BinaryStruct):
+        sub_header: SubHeader
         length: UInt16
     
     class Packet(BinaryStruct):
@@ -12,7 +15,7 @@ def main():
 
     payload = b"Hello World!"
     pkt = Packet(
-        header=Header(version=1,length=len(payload)),
+        header=Header(sub_header=SubHeader(version=1),length=len(payload)),
         payload=payload
     )
 
@@ -28,8 +31,8 @@ def main():
     print(parsed_pkt)
 
     print("\nField values:")
-    print("Version:", parsed_pkt.header.version)
-    assert parsed_pkt.header.version == pkt.header.version
+    print("Version:", parsed_pkt.header.sub_header.version)
+    assert parsed_pkt.header.sub_header.version == pkt.header.sub_header.version
     print("Length:", parsed_pkt.header.length)
     assert parsed_pkt.header.length == pkt.header.length
     print("Payload:", parsed_pkt.payload)
